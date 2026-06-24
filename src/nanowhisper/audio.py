@@ -40,9 +40,10 @@ def load_audio(path: str, config: NanoWhisperConfig) -> torch.Tensor:
 
 
 def augment_waveform(waveform: torch.Tensor, sample_rate: int) -> torch.Tensor:
-    """Time-stretch the waveform by a random rate in [0.9, 1.1]."""
+    """Time-stretch the waveform by a random rate in [0.9, 1.1] with 50% probability."""
+    if random.random() < 0.5:
+        return waveform
     rate = random.uniform(0.9, 1.1)
-    # torchaudio.functional.resample is the portable way to time-stretch without librosa
     new_sr = int(sample_rate * rate)
     stretched = torchaudio.functional.resample(waveform.unsqueeze(0), new_sr, sample_rate).squeeze(0)
     return stretched
