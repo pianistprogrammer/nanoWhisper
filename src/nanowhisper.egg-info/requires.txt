@@ -1,0 +1,14 @@
+torch>=2.2
+torchaudio>=2.2
+numpy>=1.24
+tqdm>=4.66
+tensorboard>=2.16
+datasets>=5.0.0
+soundfile>=0.14.0
+trackio
+
+[:platform_system == "Darwin"]
+torchcodec>=0.14
+
+[dev]
+pytest>=8.0
