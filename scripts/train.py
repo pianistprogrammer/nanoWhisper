@@ -123,7 +123,7 @@ def main() -> None:
     set_seed(config.seed)
 
     tokenizer = YorubaTokenizer()
-    train_data = YorubaSpeechDataset(args.train_manifest, tokenizer, config, args.audio_root, augment=True)
+    train_data = YorubaSpeechDataset(args.train_manifest, tokenizer, config, args.audio_root)
     collate = partial(collate_batch, pad_id=tokenizer.pad_id)
     train_loader = DataLoader(
         train_data,
