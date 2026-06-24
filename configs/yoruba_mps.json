@@ -10,16 +10,17 @@
   "decoder_layers": 4,
   "n_heads": 4,
   "ffn_dim": 768,
-  "dropout": 0.3,
+  "dropout": 0.2,
   "batch_size": 4,
-  "epochs": 30,
+  "epochs": 100,
   "learning_rate": 0.0003,
-  "weight_decay": 0.01,
+  "weight_decay": 0.05,
   "grad_clip": 1.0,
   "num_workers": 0,
   "seed": 1337,
   "eval_every_steps": 100,
   "save_every_steps": 100,
-  "log_every_steps": 10
+  "log_every_steps": 10,
+  "early_stopping_patience": 10
 }
 

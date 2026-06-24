@@ -123,7 +123,7 @@ def main() -> None:
     set_seed(config.seed)
 
     tokenizer = YorubaTokenizer()
-    train_data = YorubaSpeechDataset(args.train_manifest, tokenizer, config, args.audio_root)
+    train_data = YorubaSpeechDataset(args.train_manifest, tokenizer, config, args.audio_root, augment=True)
     collate = partial(collate_batch, pad_id=tokenizer.pad_id)
     train_loader = DataLoader(
         train_data,
@@ -154,6 +154,7 @@ def main() -> None:
     start_epoch = 0
     global_step = 0
     best_val_loss = float("inf")
+    patience_counter = 0
 
     if args.resume:
         checkpoint = load_checkpoint(args.resume, device)
@@ -276,6 +277,7 @@ def main() -> None:
                 })
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
+                    patience_counter = 0
                     save_checkpoint(
                         checkpoint_dir / "best.pt",
                         model,
@@ -288,6 +290,8 @@ def main() -> None:
                         tokenizer.vocab,
                         scheduler,
                     )
+                else:
+                    patience_counter += 1
 
             if global_step % config.save_every_steps == 0:
                 save_checkpoint(
@@ -325,6 +329,7 @@ def main() -> None:
                 print(f"\nEpoch {epoch + 1} complete. Val loss: {val_loss:.4f}")
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
+                    patience_counter = 0
                     save_checkpoint(
                         checkpoint_dir / "best.pt",
                         model,
@@ -337,6 +342,8 @@ def main() -> None:
                         tokenizer.vocab,
                         scheduler,
                     )
+                else:
+                    patience_counter += 1
 
         save_checkpoint(
             checkpoint_dir / "last.pt",
@@ -350,6 +357,11 @@ def main() -> None:
             tokenizer.vocab,
             scheduler,
         )
+
+        early_stop_patience = getattr(config, "early_stopping_patience", 0)
+        if early_stop_patience > 0 and patience_counter >= early_stop_patience:
+            print(f"Early stopping: val loss did not improve for {patience_counter} evaluations.")
+            break
 
     wandb.finish()
 

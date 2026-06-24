@@ -19,11 +19,12 @@ class NanoWhisperConfig:
     decoder_layers: int = 4
     n_heads: int = 4
     ffn_dim: int = 768
-    dropout: float = 0.1
+    dropout: float = 0.2
     batch_size: int = 8
-    epochs: int = 30
+    epochs: int = 100
     learning_rate: float = 3e-4
-    weight_decay: float = 0.01
+    weight_decay: float = 0.05
+    early_stopping_patience: int = 10
     grad_clip: float = 1.0
     num_workers: int = 2
     seed: int = 1337

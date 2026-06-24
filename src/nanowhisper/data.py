@@ -8,7 +8,7 @@ from typing import Any
 import torch
 from torch.utils.data import Dataset
 
-from nanowhisper.audio import LogMelExtractor, load_audio, pad_or_trim_features
+from nanowhisper.audio import LogMelExtractor, augment_waveform, load_audio, pad_or_trim_features, spec_augment
 from nanowhisper.config import NanoWhisperConfig
 from nanowhisper.tokenizer import YorubaTokenizer
 
@@ -42,10 +42,12 @@ class YorubaSpeechDataset(Dataset[dict[str, Any]]):
         tokenizer: YorubaTokenizer,
         config: NanoWhisperConfig,
         audio_root: str | Path | None = None,
+        augment: bool = False,
     ) -> None:
         self.examples = read_manifest(manifest, audio_root)
         self.tokenizer = tokenizer
         self.config = config
+        self.augment = augment
         self.extractor = LogMelExtractor(config)
 
     def __len__(self) -> int:
@@ -54,9 +56,16 @@ class YorubaSpeechDataset(Dataset[dict[str, Any]]):
     def __getitem__(self, index: int) -> dict[str, Any]:
         item = self.examples[index]
         waveform = load_audio(item["audio_path"], self.config)
+        if self.augment:
+            waveform = augment_waveform(waveform, self.config.sample_rate)
+            max_samples = self.config.max_audio_samples
+            if waveform.numel() > max_samples:
+                waveform = waveform[:max_samples]
         with torch.no_grad():
             features = self.extractor(waveform)
         features = pad_or_trim_features(features, self.config.max_audio_frames)
+        if self.augment:
+            features = spec_augment(features)
         token_ids = self.tokenizer.encode(item["text"], self.config.max_text_tokens)
         return {
             "features": features,
